@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-
+from elasticsearch_dsl import DocType, Completion,Keyword, Text, Integer, Boolean, Nested
 from elasticsearch_dsl.analysis import CustomAnalyzer as _CustomAnalyzer
 
 from elasticsearch_dsl.connections import connections
@@ -14,23 +14,31 @@ class CustomAnalyzer(_CustomAnalyzer):
 
 ik_analyzer = CustomAnalyzer("ik_max_word", filter=["lowercase"])
 
-class ArticleType(DocType):
-    suggest = Completion(analyzer=ik_analyzer)
-    title = Text(analyzer="ik_max_word")
-    create_date = Date()
-    url = Keyword()
-    url_object_id = Keyword()
-    front_image_url = Keyword()
-    front_image_path = Keyword()
-    praise_nums = Integer()
-    comment_nums = Integer()
-    fav_nums = Integer()
-    tags = Text(analyzer="ik_max_word")
-    content = Text(analyzer="ik_max_word")
-
+class MovieType(DocType):
+    #搜索建议词
+    suggest = Completion(analyzer = ik_analyzer)
+    #电影id，豆瓣电影自带id，dytt则为md5(movie_url)
+    movie_id = Keyword()
+    #电影标题
+    movie_title = Text(analyzer = 'ik_max_word')
+    #电影导演
+    movie_directors = Text(analyzer = 'ik_max_word')
+    #电影评分
+    movie_rate = Keyword()
+    #电影url
+    movie_url = Keyword()
+    #电影演员
+    movie_casts = Text(analyzer = 'ik_max_word')
+    #电影封面
+    movie_cover = Keyword()
+    #电影简介
+    movie_abstract = Text(analyzer = 'ik_max_word')
+    #电影下载链接
+    movie_download_url = Keyword()
+    #todo 增加电影上映时间
     class Meta:
-        index = "jobbole"
-        doc_type = "article"
+        index = 'sesearch'
+        doc_type = 'movie'
 
 if __name__ == "__main__":
-    ArticleType.init()
+    MovieType.init()

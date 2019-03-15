@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'SESearch.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'MarkManagement',
+        'NAME': 'SESpider',
         'USER': 'root',
         'PASSWORD': 'ppz7long',
         'HOST': '127.0.0.1',

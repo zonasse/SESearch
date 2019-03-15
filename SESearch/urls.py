@@ -16,9 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,re_path
 from django.conf.urls import include
-from SESearch.apps.zsearch.urls import urlpath
-from SESearch.apps.zsearch.view.views import IndexView
+from SESearch.apps.zsearch.view.views import IndexView,SuggestView,SearchView
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path(r'^$',IndexView.as_view({'get':'index'}))
+    re_path(r'^$',IndexView.as_view({'get':'index'})),
+    re_path(r'^search$',SearchView.as_view({'get':'search'}),name='search'),
+    re_path(r'^suggest$',SuggestView.as_view({'get':'suggest'}),name='suggest'),
+
 ]

@@ -1,23 +1,33 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework import viewsets
-
+from datetime import datetime
+from elasticsearch import Elasticsearch
+from SESearch.apps.zsearch.model.models import *
+import json
+import redis
 # Create your views here.
+redis_cli = redis.StrictRedis()
+client = Elasticsearch(hosts=["127.0.0.1"])
+
+
 class IndexView(viewsets.ViewSet):
     def index(self,request):
-        return render(request,'index.html')
+        topn_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
+        return render(request,'index.html',{"topn_search":topn_search})
 
 # Create your views here.
-class SearchSuggest(View):
-    def get(self, request):
-        key_words = request.GET.get('s','')
+class SuggestView(viewsets.ViewSet):
+    def suggest(self, request):
+        key_words = request.GET.get('key','')
         re_datas = []
         if key_words:
-            s = ArticleType.search()
+            s = MovieType.search()
             s = s.suggest('my_suggest', key_words, completion={
                 "field":"suggest", "fuzzy":{
                     "fuzziness":2
                 },
-                "size": 10
+                "size": 10,
             })
             suggestions = s.execute_suggest()
             for match in suggestions.my_suggest[0].options:
@@ -26,29 +36,31 @@ class SearchSuggest(View):
         return HttpResponse(json.dumps(re_datas), content_type="application/json")
 
 
-class SearchView(View):
-    def get(self, request):
-        key_words = request.GET.get("q","")
-        s_type = request.GET.get("s_type", "article")
+class SearchView(viewsets.ViewSet):
+    def search(self, request):
+        key_words = request.GET.get("key","")
+        s_type = request.GET.get("key_type", "movie")
 
         redis_cli.zincrby("search_keywords_set", key_words)
 
         topn_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
-        page = request.GET.get("p", "1")
+        page = request.GET.get("page", "1")
         try:
             page = int(page)
         except:
             page = 1
 
-        jobbole_count = redis_cli.get("jobbole_count")
+        douban_movie_count = redis_cli.get("douban_movie_count")
+        dytt_movie_count = redis_cli.get("dytt_movie_count")
+
         start_time = datetime.now()
         response = client.search(
-            index= "jobbole",
+            index= "sesearch",
             body={
                 "query":{
                     "multi_match":{
                         "query":key_words,
-                        "fields":["tags", "title", "content"]
+                        "fields":["movie_title", "movie_directors", "movie_casts","movie_abstract"]
                     }
                 },
                 "from":(page-1)*10,
@@ -89,11 +101,12 @@ class SearchView(View):
 
             hit_list.append(hit_dict)
 
-        return render(request, "../../../../Desktop/SEProj/SESearch/templates/result.html", {"page":page,
+        return render(request, "result.html", {"page":page,
                                                "all_hits":hit_list,
                                                "key_words":key_words,
                                                "total_nums":total_nums,
                                                "page_nums":page_nums,
                                                "last_seconds":last_seconds,
-                                               "jobbole_count":jobbole_count,
+                                               "douban_movie_count":douban_movie_count,
+                                               "dytt_movie_count":dytt_movie_count,
                                                "topn_search":topn_search})

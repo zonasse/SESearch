@@ -18,9 +18,8 @@
             </h1>
             <div class="nav ue-clear">
             	<ul class="searchList">
-                    <li class="searchItem current" data-type="article">文章</li>
-                    <li class="searchItem" data-type="question">问答</li>
-                    <li class="searchItem" data-type="job">职位</li>
+                    <li class="searchItem current" data-type="movie">电影</li>
+                    <li class="searchItem" data-type="book">图书</li>
                 </ul>
             </div>
             <div class="inputArea">
@@ -39,7 +38,7 @@
             	<p class="history">
                 	<label>热门搜索：</label>
                     {% for search_words in topn_search %}
-                        <a href="/search?q={{ search_words }}">{{ search_words }}</a>
+                        <a href="/search?key={{ search_words }}">{{ search_words }}</a>
                     {% endfor %}
                 </p>
                 <p class="history mysearch">
@@ -58,7 +57,7 @@
 
     <div class="foot">
     	<div class="wrap">
-            <div class="copyright">Copyright &copy;uimaker.com 版权所有  E-mail:admin@uimaker.com</div>
+            <div class="copyright">Copyright &copy;317@1024.com 2019</div>
         </div>
     </div>
 </div>
@@ -94,7 +93,7 @@
                 cache: false,
                 type: 'get',
                 dataType:'json',
-                url:suggest_url+"?s="+searchText+"&s_type="+$(".searchItem.current").attr('data-type'),
+                url:suggest_url+"?key="+searchText+"&key_type="+$(".searchItem.current").attr('data-type'),
                 async: true,
                 success: function(data) {
                     for (var i=0;i<data.length;i++){
@@ -139,7 +138,7 @@
             MapSearchArr();
         }
 
-        window.location.href=search_url+'?q='+val+"&s_type="+$(".searchItem.current").attr('data-type')
+        window.location.href=search_url+'?key='+val+"&key_type="+$(".searchItem.current").attr('data-type')
 
     }
 
@@ -152,7 +151,7 @@
             arrLen = searchArr.length
         }
         for (var i=0;i<arrLen;i++){
-            tmpHtml += '<a href="'+search_url+'?q='+searchArr[i]+'">'+searchArr[i]+'</a>'
+            tmpHtml += '<a href="'+search_url+'?key='+searchArr[i]+'">'+searchArr[i]+'</a>'
         }
         $(".mysearch .all-search").html(tmpHtml);
     }
