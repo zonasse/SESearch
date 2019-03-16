@@ -14,8 +14,10 @@
 	<div id="hd" class="ue-clear">
     	<a href="/"><div class="logo"></div></a>
         <div class="inputArea">
-        	<input type="text" class="searchInput" value="{{ key_words }}"/>
+        	<input type="text" class="searchInput" value="{{ key_word }}"/>
             <input type="button" class="searchButton" onclick="add_search()"/>
+            <ul class="dataList">
+            </ul>
         </div>
     </div>
     <div class="nav">
@@ -32,11 +34,11 @@
                 <ul class="subfieldContext">
                     <li>
                     	<span class="name">豆瓣</span>
-						<span class="unit">(0)</span>
+						<span class="unit">{{ douban_movie_count }}</span>
                     </li>
                     <li>
                     	<span class="name">电影天堂</span>
-						<span class="unit">(0)</span>
+						<span class="unit">{{ dytt_movie_count }}  </span>
                     </li>
                     <li class="more">
                     	<a href="javascript:;">
@@ -59,7 +61,7 @@
                     {% for hit in all_hits %}
                     <div class="resultItem">
                             <div class="itemHead">
-                                <a href="{{ hit.url }}"  target="_blank" class="title">{% autoescape off %}{{ hit.title }}{% endautoescape %}</a>
+                                <a href="{{ hit.movie_url }}"  target="_blank" class="title">{% autoescape off %}{{ hit.movie_title }}{% endautoescape %}</a>
                                 <span class="divsion">-</span>
                                 <span class="fileType">
                                     <span class="label">来源：</span>
@@ -67,11 +69,11 @@
                                 </span>
                                 <span class="dependValue">
                                     <span class="label">得分：</span>
-                                    <span class="value">{{ hit.score }}</span>
+                                    <span class="value">{{ hit.movie_score }}</span>
                                 </span>
                             </div>
                             <div class="itemBody">
-                                {% autoescape off %}{{ hit.content }}{% endautoescape %}
+                                {% autoescape off %}{{ hit.movie_abstract }}{% endautoescape %}
                             </div>
                             <div class="itemFoot">
                                 <span class="info">
@@ -121,6 +123,37 @@
 <script type="text/javascript">
     var search_url = "{% url 'search' %}"
 
+    {#搜索建议手动分割#}
+    var suggest_url = "{% url "suggest" %}"
+
+     // 搜索建议
+    $(function(){
+        $('.searchInput').bind(' input propertychange ',function(){
+            var searchText = $(this).val();
+            var tmpHtml = ""
+            $.ajax({
+                cache: false,
+                type: 'get',
+                dataType:'json',
+                url:suggest_url+"?key="+searchText+"&key_type="+$(".searchItem.current").attr('data-type'),
+                async: true,
+                success: function(data) {
+                    for (var i=0;i<data.length;i++){
+                        tmpHtml += '<li><a href="'+search_url+'?key='+data[i]+'">'+data[i]+'</a></li>'
+                    }
+                    $(".dataList").html("")
+                    $(".dataList").append(tmpHtml);
+                    if (data.length == 0){
+                        $('.dataList').hide()
+                    }else {
+                        $('.dataList').show()
+                    }
+                }
+            });
+        } );
+    })
+    {#搜索建议手动分割#}
+
 	$('.searchList').on('click', '.searchItem', function(){
 		$('.searchList .searchItem').removeClass('current');
 		$(this).addClass('current');	
@@ -165,7 +198,6 @@
 		}
         
     });
-	var key_words = "java"
 	//分页
 	$(".pagination").pagination({{ total_nums }}, {
 		current_page :{{ page|add:'-1' }}, //当前页码
@@ -174,7 +206,7 @@
 		callback :pageselectCallback
 	});
 	function pageselectCallback(page_id, jq) {
-		window.location.href=search_url+'?q='+key_words+'&p='+page_id
+		window.location.href=search_url+'?key='+'{{ key_word }}'+'&page='+page_id
 	}
 	
 	setHeight();
@@ -232,7 +264,7 @@
             MapSearchArr();
         }
 
-        window.location.href=search_url+'?q='+val+"&s_type="+$(".searchItem.current").attr('data-type')
+        window.location.href=search_url+'?key='+val+"&key_type="+$(".searchItem.current").attr('data-type')
 
     }
 
@@ -245,7 +277,7 @@
             arrLen = searchArr.length
         }
         for (var i=0;i<arrLen;i++){
-            tmpHtml += '<li><a href="/search?q='+searchArr[i]+'">'+searchArr[i]+'</a></li>'
+            tmpHtml += '<li><a href="/search?key='+searchArr[i]+'">'+searchArr[i]+'</a></li>'
         }
         $(".mySearch .historyList").append(tmpHtml);
     }
